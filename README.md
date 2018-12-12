@@ -1,6 +1,6 @@
 # react-leaflet-distortable-imageoverlay
 
-> Scale, skew, rotate and translate image overlays in react
+> Scale, skew and rotate image overlays in react
 
 [![NPM](https://img.shields.io/npm/v/react-leaflet-distortable-imageoverlay.svg)](https://www.npmjs.com/package/react-leaflet-distortable-imageoverlay) [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
 
@@ -49,7 +49,7 @@ class Example extends Component {
 				attribution=""
 				url="http://mt0.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"/>
 
-				<ReactDistortableImageOverlay 
+				<ReactDistortableImageOverlay
 					url="example.jpg"
 					editMode={this.state.editMode}
 					onCornersUpdated={this.onCornersUpdated.bind(this)}

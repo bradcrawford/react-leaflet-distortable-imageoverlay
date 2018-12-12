@@ -1,66 +1,37 @@
-import React, { Component } from 'react'
+import { MapLayer, withLeaflet } from 'react-leaflet';
 import PropTypes from 'prop-types';
-import ReactDistortableImageOverlayMapLayer from './react-distortable-imageoverlay-maplayer';
 import L from 'leaflet';
 
+import LeafletRubbersheet from './lib/leaflet-rubbersheet';
 
-type Props = {
-  url: PropTypes.string,
-  corners: [L.latlng, L.latlng, L.latlng, L.latlng],
-  editMode: PropTypes.string,
-  opacity: PropTypes.number,
-  onCornersUpdated: (corners) => void;
-  onWellKnownTextUpdated: (corners) => void;
+class ReactLeafletRubbersheet extends MapLayer {
+  static propTypes = {
+    url: PropTypes.string,
+    corners: PropTypes.arrayOf(PropTypes.object),
+    mode: PropTypes.oneOf(['rotate', 'distort']),
+    opacity: PropTypes.number,
+    onUpdate: PropTypes.func
+  }
+
+  createLeafletElement(props) {
+    const { url, corners, mode, onUpdate, ...remaining } = this.props;
+    if (!this.leafletRubbersheet) {
+      this.leafletRubbersheet = new LeafletRubbersheet(url, corners, mode, this.getOptions(remaining));
+      this.leafletRubbersheet.on('edit', function(e) {
+        onUpdate(this.getCorners())
+      });
+    }
+
+    return this.leafletRubbersheet;
+  }
+
+  updateLeafletElement(fromProps, toProps) {
+    const { mode, opacity } = fromProps;
+    const { mode: newMode, opacity: newOpacity } = toProps;
+
+    if (mode !== newMode) { this.leafletRubbersheet.setMode(newMode); }
+    if (opacity !== newOpacity) { this.leafletRubbersheet.setOpacity(newOpacity); }
+  }
 }
 
-// This class acts as a geometry state container for the Leaflet MapLayer component.
-// The corners of the ImageOverlay are passed in as props, held as state and changes
-// are passed upstream with the `onCornersUpdated` method
-export default class ReactDistortableImageOverlay extends React.Component {
-
-  state = {
-    corners: [L.latlng, L.latlng, L.latlng, L.latlng],
-  }
-
-  constructor(props) {
-    super(props);
-    this.state = { 
-      corners: props.corners
-    }
-  }
-
-  onUpdate(corners) {
-    
-    // Prevents leaflet-distortableimage from firing as edits are taking place
-    if (corners === undefined || corners[0] === undefined) return
-    
-    if (this.props.onCornersUpdated !== undefined) {
-      this.props.onCornersUpdated(corners);
-    }
-
-    if (this.props.onWellKnownTextUpdated !== undefined) {
-      
-      // WKT needs to close off the polygon, also switch the BR & BL 
-      var swappedLatLngs = [ corners[0], corners[1], corners[3], corners[2], corners[0] ];
-      var flattenedLatLngs = swappedLatLngs.map(x => x.lng + ' ' + x.lat)
-      this.props.onWellKnownTextUpdated('POLYGON((' + flattenedLatLngs.join(', ') + '))');
-    }
-
-    this.setState({
-      corners: corners
-    });
-  }
-
-  render() {
-
-    return (
-      <ReactDistortableImageOverlayMapLayer 
-        url={this.props.url}
-        opacity={this.props.opacity}
-        corners={this.state.corners}
-        editMode={this.props.editMode}
-        onUpdate={this.onUpdate.bind(this)}
-      />
-    )
-  }
-}
+export default withLeaflet(ReactLeafletRubbersheet);
